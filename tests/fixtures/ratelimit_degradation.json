@@ -1,0 +1,24 @@
+{
+  "limit": 3,
+  "acquire_cases": [
+    {
+      "id": "under_limit",
+      "active": 2,
+      "expected_allowed": true,
+      "expected_degraded": true,
+      "expected_repo_calls": 1
+    },
+    {
+      "id": "at_limit",
+      "active": 3,
+      "expected_allowed": false,
+      "expected_degraded": true,
+      "expected_repo_calls": 0
+    }
+  ],
+  "rejection_retry_after": {
+    "active": 3,
+    "limit": 3,
+    "expected_min_retry_after_seconds": 0
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "identical_pairs": [
+    {
+      "id": "exact_match",
+      "a": "Hello world.",
+      "b": "Hello world."
+    },
+    {
+      "id": "leading_trailing_whitespace",
+      "a": "  Hello world.\n\n",
+      "b": "Hello world."
+    },
+    {
+      "id": "crlf_normalized",
+      "a": "line one\r\nline two",
+      "b": "line one\nline two"
+    },
+    {
+      "id": "cr_normalized",
+      "a": "line one\rline two",
+      "b": "line one\nline two"
+    }
+  ],
+  "distinct_pairs": [
+    {
+      "id": "internal_whitespace_preserved",
+      "a": "a  b",
+      "b": "a b"
+    },
+    {
+      "id": "case_sensitive",
+      "a": "Hello",
+      "b": "hello"
+    },
+    {
+      "id": "different_content",
+      "a": "first",
+      "b": "second"
+    }
+  ],
+  "sha256_sample": "anything"
+}

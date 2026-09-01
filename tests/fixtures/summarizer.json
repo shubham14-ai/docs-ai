@@ -1,0 +1,60 @@
+{
+  "content": "Revenue increased sharply this quarter. Costs decreased across every region. Revenue guidance was raised for the coming year.",
+  "expected_sentence_count": 3,
+  "expected_keyword_present": "revenue",
+  "expected_keyword_absent": "the",
+  "document_refs": {
+    "original": {
+      "document_id": "64f0000000000000000000aa",
+      "user_id": "user-1",
+      "title": "Report",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "submitted_at": "2026-09-01T12:00:00+00:00"
+    },
+    "resubmitted": {
+      "document_id": "64f0000000000000000000bb",
+      "user_id": "user-1",
+      "title": "Quarterly report (copy)",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "submitted_at": "2026-09-01T12:00:00+00:00"
+    },
+    "chain_first": {
+      "document_id": "aaaaaaaaaaaaaaaaaaaaaaaa",
+      "user_id": "user-1",
+      "title": "Report",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "submitted_at": "2026-09-01T12:00:00+00:00"
+    },
+    "chain_second": {
+      "document_id": "bbbbbbbbbbbbbbbbbbbbbbbb",
+      "user_id": "user-1",
+      "title": "Copy 1",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "submitted_at": "2026-09-01T12:00:00+00:00"
+    },
+    "chain_third": {
+      "document_id": "cccccccccccccccccccccccc",
+      "user_id": "user-1",
+      "title": "Copy 2",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "submitted_at": "2026-09-01T12:00:00+00:00"
+    }
+  },
+  "text_provenance_checks": [
+    "64f0000000000000000000aa",
+    "user-1",
+    "aaaaaaaaaaaaaaaa",
+    "2026-09-01"
+  ],
+  "duration_bounds": {
+    "min_seconds": 10.0,
+    "max_seconds": 30.0,
+    "sample_count": 100,
+    "rng_seed": 7
+  },
+  "failure_rate_cases": [
+    {"id": "always_fails",  "failure_rate": 1.0, "rng_seed": 1, "expect_error": true},
+    {"id": "never_fails",   "failure_rate": 0.0, "rng_seed": 1, "expect_error": false,
+     "expected_model": "mock-summarizer-v1"}
+  ]
+}

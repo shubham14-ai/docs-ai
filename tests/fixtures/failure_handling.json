@@ -1,0 +1,27 @@
+{
+  "user": "failing-user",
+  "always_fails_settings": {"failure_rate": 1.0},
+  "documents": {
+    "doomed":       "doomed document",
+    "fresh_start":  "a fresh start"
+  },
+  "first_failure": {
+    "expected_status":        "queued",
+    "expected_attempts":      1,
+    "expected_error_code":    "PROCESSING_TRANSIENT",
+    "expected_retry_zset_size": 1
+  },
+  "terminal_failure": {
+    "expected_status":     "failed",
+    "expected_error_code": "PROCESSING_TRANSIENT"
+  },
+  "api_failed_response": {
+    "expected_status_value": "failed",
+    "expected_summary":      null,
+    "expected_error_code":   "PROCESSING_TRANSIENT"
+  },
+  "promote_due": {
+    "expected_promoted":   1,
+    "expected_zset_after": 0
+  }
+}

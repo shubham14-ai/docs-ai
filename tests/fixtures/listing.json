@@ -1,0 +1,49 @@
+{
+  "user": "list-user",
+  "seed_summary": {
+    "text": "s",
+    "word_count": 1,
+    "char_count": 1,
+    "sentence_count": 1,
+    "keywords": [],
+    "reading_time_seconds": 1,
+    "model": "mock-summarizer-v1"
+  },
+  "paginated_scenario": {
+    "total_docs": 7,
+    "page_size": 3,
+    "expected_items_on_first_page": 3,
+    "expected_meta": {
+      "page": 1,
+      "page_size": 3,
+      "total": 7,
+      "total_pages": 3,
+      "has_next": true
+    }
+  },
+  "last_page_scenario": {
+    "total_docs": 7,
+    "page": 3,
+    "page_size": 3,
+    "expected_items": 1,
+    "expected_has_next": false
+  },
+  "status_filter_scenario": {
+    "total_docs": 7,
+    "filter": "completed",
+    "expected_total": 4,
+    "expected_statuses": ["completed"]
+  },
+  "empty_user": "nobody",
+  "empty_user_expected": {
+    "items": [],
+    "total": 0,
+    "total_pages": 0
+  },
+  "invalid_pagination_cases": [
+    {"id": "page_zero",        "params": {"page": 0},          "expected_status": 422},
+    {"id": "page_size_zero",   "params": {"page_size": 0},     "expected_status": 422},
+    {"id": "page_size_over",   "params": {"page_size": 101},   "expected_status": 422},
+    {"id": "unknown_status",   "params": {"status": "halfway"},"expected_status": 422}
+  ]
+}

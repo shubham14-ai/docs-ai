@@ -1,0 +1,174 @@
+# Base stack: MongoDB, Redis, the API and one worker, built from the `prod`
+# image stage (source baked in, no reloader).
+#
+# `docker-compose.override.yml` sits on top of this file and is applied
+# automatically by `docker compose up`, switching the API and the worker to the
+# `dev` stage with the source bind-mounted and live reload on. To run the base
+# stack alone, name the file explicitly:
+#
+#   docker compose up -d                        # dev  (override applied)
+#   docker compose -f docker-compose.yml up -d  # prod (override ignored)
+#
+# `./doc-ai.sh` wraps both. Scale processing independently of the API:
+#
+#   ./doc-ai.sh scale 3
+#
+# Every setting comes from the environment (see .env.example). The API and the
+# worker are the same image with different commands.
+
+x-app-env: &app-env
+  MONGODB_URI: mongodb://mongo:27017
+  MONGODB_DB: ${MONGODB_DB:-document_insights}
+  REDIS_URL: redis://redis:6379/0
+  MAX_ACTIVE_DOCS_PER_USER: ${MAX_ACTIVE_DOCS_PER_USER:-3}
+  CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-3600}
+  PROCESSING_MIN_SECONDS: ${PROCESSING_MIN_SECONDS:-10}
+  PROCESSING_MAX_SECONDS: ${PROCESSING_MAX_SECONDS:-30}
+  FAILURE_RATE: ${FAILURE_RATE:-0.1}
+  MAX_ATTEMPTS: ${MAX_ATTEMPTS:-3}
+  WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-10}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+
+# One build definition, three services. The shared `image:` tag means compose
+# builds the image once and the worker and tests reuse it.
+x-build: &app-build
+  context: .
+  target: prod
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # Published on 27018, not 27017: a native mongod on the host may already
+    # hold 27017, and a client on the host then reaches that one instead of
+    # this container. Nothing in the stack is affected -- the API and the
+    # worker reach Mongo as mongo:27017 over the compose network.
+    ports:
+      - "${MONGODB_HOST_PORT:-27018}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Streams and the retry ZSET are recoverable from MongoDB, but appendonly
+    # keeps a restart from re-running work that was already in flight.
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build: *app-build
+    image: docs-ai:prod
+    restart: unless-stopped
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build: *app-build
+    image: docs-ai:prod
+    restart: unless-stopped
+    command: ["python", "-m", "app.workers.main"]
+    environment: *app-env
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Give an in-flight document time to finish before SIGKILL.
+    stop_grace_period: 45s
+
+  ui:
+    build:
+      context: ./ui
+      target: runner
+      args:
+        # Rewrites inside the Next.js server talk to the `api` container name.
+        NEXT_PUBLIC_API_URL: http://api:8000
+    image: docs-ai-ui:prod
+    restart: unless-stopped
+    ports:
+      - "${UI_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      # Runtime rewrite target — same as build arg, kept in sync via env.
+      NEXT_PUBLIC_API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Test runner. A separate service on the `test` profile, so `up` never starts
+  # it and the production image never carries pytest: the `dev` stage is a
+  # different target from the `prod` stage the api and worker are built from.
+  #
+  #   ./doc-ai.sh test              whole suite + report
+  #   ./doc-ai.sh test unit         one level
+  #   docker compose --profile test run --rm tests
+  #
+  # Reports are written into the bind-mounted ./test-results on the host.
+  tests:
+    profiles: ["test"]
+    build:
+      context: .
+      target: dev
+    image: docs-ai:dev
+    # Source and tests are mounted, so editing a test does not rebuild anything.
+    # test-results is the one writable mount: the report files land there.
+    volumes:
+      - ./app:/srv/app:ro
+      - ./tests:/srv/tests:ro
+      - ./pytest.ini:/srv/pytest.ini:ro
+      - ./conftest.py:/srv/conftest.py:ro
+      - ./test-results:/srv/test-results
+    command: ["pytest"]
+    environment:
+      <<: *app-env
+      MONGODB_DB: document_insights_test
+      REDIS_URL: redis://redis:6379/1
+      # Real timings would make the suite take minutes; the durations are
+      # configuration precisely so tests can compress them.
+      PROCESSING_MIN_SECONDS: "0"
+      PROCESSING_MAX_SECONDS: "0"
+      FAILURE_RATE: "0"
+      LOG_FORMAT: console
+      LOG_LEVEL: WARNING
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  redis-data:
