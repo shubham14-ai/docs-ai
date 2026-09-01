@@ -23,10 +23,12 @@ Read these before changing anything structural:
 
 | Document | What it settles |
 |---|---|
-| `docs/BE_Take_Home_Document_Insights_Api.pdf` | The requirements. The final word on scope. |
+| `docs/BE_Take_Home_Document_Insights_Api.pdf` | The requirements. The final word on scope. Local only — gitignored, not redistributed. |
 | `docs/README.md` | **The index.** Every note in the vault, one line each. Start here. |
-| `docs/00-flow.md` | Architecture, data model, submit/worker flows, race table, rubric mapping |
-| `docs/01-api-versioning.md` | Why routes live under `/api/v1` and how versions are composed |
+| `docs/flow.md` | Submit sequence, worker consume loop, state machine, sweeper |
+| `docs/architecture.md` | System diagram, process roles, repo layout, design decisions |
+| `docs/api.md` | Endpoints, why routes live under `/api/v1`, status codes, error envelope |
+| `docs/assumptions.md` | Every ambiguity in the brief and the reading taken |
 | `README.md` | Reviewer-facing summary: quickstart, architecture, the decisions that matter |
 
 `docs/` is a linked note vault — one note per concern, cross-linked with
@@ -77,7 +79,7 @@ Every run prints a tree grouped suite -> file -> test and writes
 That reporting lives entirely in `tests/report_plugin.py`, loaded by the root
 `conftest.py`; it observes the report stream and never changes what runs.
 Boundary tests carry `@pytest.mark.edge` so they are both selectable and
-visible in the report. See `docs/14-test-reporting.md`.
+visible in the report. See `docs/testing.md`.
 
 ## Architecture in one paragraph
 
@@ -95,7 +97,7 @@ app/
 ├── config.py          pydantic-settings; every tunable, no hardcoded strings
 ├── db.py              Mongo/Redis client construction, REDIS_ERRORS tuple
 ├── api/
-│   ├── router.py      version composition (per capability, see 01-api-versioning)
+│   ├── router.py      version composition (per capability, see docs/api.md)
 │   ├── deps.py        DI providers
 │   ├── errors.py      exception handlers -> one error envelope; request-id middleware
 │   └── v1/            documents.py · users.py · health.py
