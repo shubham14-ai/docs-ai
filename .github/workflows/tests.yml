@@ -11,6 +11,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    # The JUnit reporter creates a check run; the default GITHUB_TOKEN is
+    # read-only on pull requests unless this is declared.
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
