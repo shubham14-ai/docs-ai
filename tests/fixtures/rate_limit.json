@@ -1,0 +1,19 @@
+{
+  "user": "limited-user",
+  "other_user": "other-user",
+  "limit": 3,
+  "concurrent_total": 6,
+  "expected_concurrent": {
+    "accepted": 3,
+    "rejected": 3
+  },
+  "rejection_details": {
+    "limit": 3,
+    "active": 3,
+    "retry_after_seconds": 15
+  },
+  "rejection_response": {
+    "expected_status": 429,
+    "expected_error_code": "RATE_LIMIT_EXCEEDED"
+  }
+}

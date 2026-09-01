@@ -1,0 +1,43 @@
+{
+  "valid_object_id": "507f1f77bcf86cd799439011",
+  "malformed_id": "not-an-object-id",
+  "correlation_id": "abc-123",
+  "health_endpoint": "/health",
+  "invalid_submit_payloads": [
+    {
+      "id": "missing_content",
+      "payload": {"user_id": "user-1", "title": "T"},
+      "expected_status": 422,
+      "expected_error_code": "VALIDATION_FAILED"
+    },
+    {
+      "id": "blank_content",
+      "payload": {"user_id": "user-1", "title": "T", "content": "   "},
+      "expected_status": 422,
+      "expected_error_code": "VALIDATION_FAILED"
+    },
+    {
+      "id": "space_in_user_id",
+      "payload": {"user_id": "bad user", "title": "T", "content": "text"},
+      "expected_status": 422,
+      "expected_error_code": "VALIDATION_FAILED"
+    },
+    {
+      "id": "empty_title",
+      "payload": {"user_id": "user-1", "title": "", "content": "text"},
+      "expected_status": 422,
+      "expected_error_code": "VALIDATION_FAILED"
+    }
+  ],
+  "submit_response": {
+    "expected_status": 201,
+    "expected_status_value": "queued",
+    "expected_from_cache": false,
+    "expected_content_hash_length": 64,
+    "expected_summary": null
+  },
+  "not_found": {
+    "expected_status": 404,
+    "expected_error_code": "DOCUMENT_NOT_FOUND"
+  }
+}
