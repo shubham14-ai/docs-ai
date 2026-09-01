@@ -1,0 +1,20 @@
+# Normalise to LF in the repository. Without this a Windows checkout commits
+# CRLF into doc-ai.sh, and a clone on macOS/Linux fails with the notoriously
+# opaque `bash\r: No such file or directory`.
+* text=auto eol=lf
+
+# Shell scripts and anything copied into a Linux image must be LF.
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# PowerShell is the one file that wants CRLF.
+*.ps1       text eol=crlf
+
+# Binary — never touch.
+*.pdf       binary
+*.docx      binary
+*.png       binary
+*.jpg       binary
+*.ico       binary
