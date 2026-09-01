@@ -40,8 +40,12 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    # Published on 27018, not 27017: a native mongod on the host may already
+    # hold 27017, and a client on the host then reaches that one instead of
+    # this container. Nothing in the stack is affected -- the API and the
+    # worker reach Mongo as mongo:27017 over the compose network.
     ports:
-      - "27017:27017"
+      - "${MONGODB_HOST_PORT:-27018}:27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
