@@ -156,24 +156,25 @@ export default function DocumentsDashboard() {
     setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
   }, [statusFilter]);
 
-  const fetchData = React.useCallback(
+  // The page and the status counts are fetched separately on purpose. The page
+  // depends on paging and the filter; the counts depend only on the user, so
+  // bundling them meant every page change re-issued four count queries that
+  // could not have changed.
+  const fetchPage = React.useCallback(
     async (background = false) => {
       if (background) setIsRefetching(true);
       const requestedUser = userId;
       try {
-        const [page, ...totals] = await Promise.all([
-          listDocuments(requestedUser, pagination.pageIndex + 1, pagination.pageSize, statusFilter),
-          ...STATUSES.map((s) => listDocuments(requestedUser, 1, 1, s)),
-        ]);
-        // The active user may have changed while these were in flight.
+        const page = await listDocuments(
+          requestedUser,
+          pagination.pageIndex + 1,
+          pagination.pageSize,
+          statusFilter
+        );
+        // The active user may have changed while this was in flight.
         if (requestedUser !== userId) return;
         setData(page.items);
         setRowCount(page.meta.total);
-        setCounts(
-          Object.fromEntries(
-            STATUSES.map((s, i) => [s, totals[i].meta.total])
-          ) as Record<DocumentStatus, number>
-        );
         setFetchError(null);
       } catch (e: unknown) {
         if (requestedUser !== userId) return;
@@ -186,10 +187,41 @@ export default function DocumentsDashboard() {
     [userId, pagination.pageIndex, pagination.pageSize, statusFilter]
   );
 
+  const fetchCounts = React.useCallback(async () => {
+    const requestedUser = userId;
+    try {
+      const totals = await Promise.all(STATUSES.map((s) => listDocuments(requestedUser, 1, 1, s)));
+      if (requestedUser !== userId) return;
+      setCounts(
+        Object.fromEntries(STATUSES.map((s, i) => [s, totals[i].meta.total])) as Record<
+          DocumentStatus,
+          number
+        >
+      );
+    } catch {
+      // The counts are a summary strip, not the page. A failure here leaves the
+      // last known values up rather than blanking a table that loaded fine;
+      // fetchPage owns the visible error.
+    }
+  }, [userId]);
+
+  /** Everything the current view shows. For refresh, upload and the live poll. */
+  const refreshAll = React.useCallback(
+    async (background = false) => {
+      await Promise.all([fetchPage(background), fetchCounts()]);
+    },
+    [fetchPage, fetchCounts]
+  );
+
   React.useEffect(() => {
     if (!hydrated) return;
-    void fetchData();
-  }, [hydrated, fetchData]);
+    void fetchPage();
+  }, [hydrated, fetchPage]);
+
+  React.useEffect(() => {
+    if (!hydrated) return;
+    void fetchCounts();
+  }, [hydrated, fetchCounts]);
 
   // While anything on this page is still moving, keep the list current without
   // a reload. The interval stops as soon as every row is terminal.
@@ -200,9 +232,9 @@ export default function DocumentsDashboard() {
 
   React.useEffect(() => {
     if (!hasInFlight) return;
-    const id = setInterval(() => void fetchData(true), LIVE_REFRESH_MS);
+    const id = setInterval(() => void refreshAll(true), LIVE_REFRESH_MS);
     return () => clearInterval(id);
-  }, [hasInFlight, fetchData]);
+  }, [hasInFlight, refreshAll]);
 
   const table = useMaterialReactTable({
     columns: COLUMNS,
@@ -256,7 +288,7 @@ export default function DocumentsDashboard() {
           <Button
             size="small"
             startIcon={<RefreshIcon />}
-            onClick={() => void fetchData(true)}
+            onClick={() => void refreshAll(true)}
             disabled={isRefetching || isLoading}
           >
             Refresh
@@ -328,7 +360,7 @@ export default function DocumentsDashboard() {
             <Alert
               severity="error"
               action={
-                <Button color="inherit" size="small" onClick={() => void fetchData(true)}>
+                <Button color="inherit" size="small" onClick={() => void refreshAll(true)}>
                   Retry
                 </Button>
               }
@@ -357,19 +389,19 @@ export default function DocumentsDashboard() {
         onClose={() => setUploadOpen(false)}
         onChanged={() => {
           setPagination((p) => ({ ...p, pageIndex: 0 }));
-          void fetchData(true);
+          void refreshAll(true);
         }}
         onViewResult={(id) => {
           setUploadOpen(false);
           setSelectedDocId(id);
-          void fetchData(true);
+          void refreshAll(true);
         }}
       />
 
       <DocumentDetailModal
         documentId={selectedDocId}
         onClose={() => setSelectedDocId(null)}
-        onSettled={() => void fetchData(true)}
+        onSettled={() => void refreshAll(true)}
       />
     </Box>
   );
