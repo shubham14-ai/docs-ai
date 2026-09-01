@@ -1,0 +1,32 @@
+# Release gate. `./doc-ai.sh test release` starts MongoDB and Redis as compose
+# dependencies of the `tests` service, so there is nothing to declare here as a
+# service container. The step's exit code is pytest's own.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the suite
+        run: ./doc-ai.sh test release
+
+      # The reports are most useful on the run that failed.
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+
+      - name: Publish JUnit results
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: test-results/junit.xml
