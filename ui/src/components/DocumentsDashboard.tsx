@@ -150,6 +150,12 @@ export default function DocumentsDashboard() {
     setIsLoading(true);
   }, [revision]);
 
+  // Changing the filter changes how many pages exist; staying on page 25 of an
+  // unfiltered list would land on an empty page of the filtered one.
+  React.useEffect(() => {
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, [statusFilter]);
+
   const fetchData = React.useCallback(
     async (background = false) => {
       if (background) setIsRefetching(true);
