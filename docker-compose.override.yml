@@ -1,0 +1,66 @@
+# Development overlay — applied automatically by `docker compose up`.
+#
+# It changes three things about the API, the worker and the UI:
+#   1. the image is built from the `dev` stage (test deps, reloader available);
+#   2. ./app is bind-mounted over the baked-in copy, so a source edit is visible
+#      inside the container immediately -- no build, no image layer, no restart;
+#   3. each process watches that directory and reloads in place (uvicorn
+#      --reload, watchfiles for the worker, `next dev` for the UI).
+#
+# The mounts are read-only: containers run the source, they never edit it.
+# Run without this overlay (baked-in source, no reloader) with:
+#   docker compose -f docker-compose.yml up -d      # or: MODE=prod ./doc-ai.sh up
+
+services:
+  ui:
+    build:
+      context: ./ui
+      target: dev
+      args:
+        NEXT_PUBLIC_API_URL: http://api:8000
+    image: docs-ai-ui:dev
+    command: ["npm", "run", "dev"]
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://api:8000
+      # inotify does not cross a Windows bind mount; without polling `next dev`
+      # never sees an edit and the page keeps serving the last compile.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    # Only the source is mounted -- node_modules and .next stay inside the
+    # container, where they were installed for its own platform.
+    volumes:
+      - ./ui/src:/app/src:ro
+      - ./ui/next.config.ts:/app/next.config.ts:ro
+      # The one writable mount in the stack: `next dev` normalises tsconfig.json
+      # on startup (paths, the Next plugin) and exits if it cannot.
+      - ./ui/tsconfig.json:/app/tsconfig.json
+      - ./ui/package.json:/app/package.json:ro
+    # `next dev` compiles a route on demand rather than serving a finished
+    # build, so a probe can take seconds where prod answers instantly. The
+    # production 5s timeout marks a working dev server unhealthy.
+    healthcheck:
+      timeout: 30s
+      interval: 30s
+      start_period: 120s
+
+  api:
+    build:
+      target: dev
+    image: docs-ai:dev
+    command:
+      ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
+       "--reload", "--reload-dir", "app"]
+    volumes:
+      - ./app:/srv/app:ro
+
+  worker:
+    build:
+      target: dev
+    image: docs-ai:dev
+    # The worker has no reloader of its own. watchfiles ships with
+    # uvicorn[standard], and its SIGTERM restart runs the same graceful drain
+    # the container stop path uses, so an in-flight document is not lost.
+    command: ["watchfiles", "--sigint-timeout", "45", "python -m app.workers.main", "app"]
+    volumes:
+      - ./app:/srv/app:ro

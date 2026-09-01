@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+.pytest_cache
+docs
+*.md
+.env
+docker-compose*.yml
+doc-ai.sh
+doc-ai.ps1
+data
+tests/__pycache__
