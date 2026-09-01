@@ -1,0 +1,23 @@
+{
+  "user": "race-user",
+  "ghost_user": "ghost-user",
+  "contents": {
+    "contested":         "contested document",
+    "heavily_contested": "heavily contested",
+    "redelivered":       "delivered twice",
+    "slow_worker":       "slow worker",
+    "abandoned":         "abandoned document",
+    "one_real":          "one real document"
+  },
+  "workers": {
+    "a":           "worker-a",
+    "b":           "worker-b",
+    "dying":       "worker-that-dies"
+  },
+  "concurrent_claim_counts": [2, 10],
+  "sweeper_expected": {
+    "reclaimed": 1
+  },
+  "drifted_counter": 3,
+  "ghost_counter": 2
+}

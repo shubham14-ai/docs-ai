@@ -1,0 +1,22 @@
+{
+  "retryable_settings": {
+    "fast": {"attempts": 3, "base_seconds": 0.001, "max_seconds": 0.002},
+    "ceiling": {"attempts": 2, "base_seconds": 0.001, "max_seconds": 0.002}
+  },
+  "backoff_cases": [
+    {
+      "id": "grows_within_ceiling",
+      "base": 1.0,
+      "maximum": 8.0,
+      "max_attempt": 5,
+      "samples": 50
+    }
+  ],
+  "backoff_jitter": {
+    "attempt": 4,
+    "base": 1.0,
+    "maximum": 60.0,
+    "samples": 50,
+    "min_distinct_values": 2
+  }
+}
