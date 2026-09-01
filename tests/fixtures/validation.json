@@ -1,0 +1,89 @@
+{
+  "base_payload": {
+    "user_id": "user-1",
+    "title": "Report",
+    "content": "Some content."
+  },
+
+  "valid_user_id_cases": [
+    {"id": "single_char",           "user_id": "u"},
+    {"id": "at_boundary_64",        "user_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"id": "digits_only",           "user_id": "1234567890"},
+    {"id": "uppercase",             "user_id": "USER-1"},
+    {"id": "all_special_chars",     "user_id": "a_.b:c@d-e"},
+    {"id": "dot_notation",          "user_id": "org.team.user"},
+    {"id": "email_like",            "user_id": "alice@example.com"},
+    {"id": "colon_namespace",       "user_id": "tenant:user-42"}
+  ],
+
+  "malformed_user_id_cases": [
+    {"id": "empty",                 "user_id": ""},
+    {"id": "space",                 "user_id": "user 1"},
+    {"id": "slash",                 "user_id": "user/1"},
+    {"id": "path_traversal",        "user_id": "../etc/passwd"},
+    {"id": "too_long",              "user_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"id": "newline",               "user_id": "user\n1"},
+    {"id": "tab",                   "user_id": "user\t1"},
+    {"id": "unicode_letter",        "user_id": "üser-1"},
+    {"id": "null_byte",             "user_id": "user\u00001"},
+    {"id": "hash_symbol",           "user_id": "user#1"},
+    {"id": "bang",                  "user_id": "user!1"},
+    {"id": "exactly_65",            "user_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"}
+  ],
+
+  "valid_title_cases": [
+    {"id": "single_char",           "title": "A"},
+    {"id": "at_boundary_300",       "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+    {"id": "digits_only",           "title": "12345"},
+    {"id": "special_symbols",       "title": "Q3 Report: Revenue & Costs (2026)"},
+    {"id": "unicode",               "title": "Résumé du rapport financier"},
+    {"id": "mixed",                 "title": "2026-Q3 [DRAFT] Costs/Revenue — Final"}
+  ],
+
+  "blank_content_cases": [
+    {"id": "empty_string",          "content": ""},
+    {"id": "spaces_only",           "content": "   "},
+    {"id": "whitespace_mixed",      "content": "\n\t "},
+    {"id": "tab_only",              "content": "\t\t\t"},
+    {"id": "crlf_only",             "content": "\r\n"},
+    {"id": "unicode_space",         "content": "\u00a0"}
+  ],
+
+  "valid_content_cases": [
+    {"id": "single_char",           "content": "x"},
+    {"id": "numbers_only",          "content": "1234567890"},
+    {"id": "special_symbols",       "content": "Revenue: $1,000,000 (+15%) — all regions."},
+    {"id": "unicode",               "content": "Données financières: résultats positifs."},
+    {"id": "mixed_whitespace_strip","content": "  valid content  ", "expected_stripped": "valid content"}
+  ],
+
+  "invalid_content_length_cases": [
+    {"id": "over_max", "content_length": 1000001, "expected_error": "ValidationError"}
+  ],
+
+  "bad_pagination_cases": [
+    {"id": "page_zero",             "page": 0,   "page_size": 20},
+    {"id": "page_negative",         "page": -1,  "page_size": 20},
+    {"id": "page_size_zero",        "page": 1,   "page_size": 0},
+    {"id": "page_size_over",        "page": 1,   "page_size": 101},
+    {"id": "page_size_negative",    "page": 1,   "page_size": -1}
+  ],
+
+  "valid_pagination_cases": [
+    {"id": "min_valid",             "page": 1,   "page_size": 1},
+    {"id": "max_page_size",         "page": 1,   "page_size": 100},
+    {"id": "large_page_number",     "page": 9999,"page_size": 20}
+  ],
+
+  "content_strip": {
+    "input":    "  hello  ",
+    "expected": "hello"
+  },
+
+  "overlong_title_length": 301,
+
+  "invalid_status":   "halfway",
+  "mixed_case_status": "Queued",
+  "valid_status":     "queued",
+  "all_valid_statuses": ["queued", "processing", "completed", "failed"]
+}

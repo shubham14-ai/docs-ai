@@ -1,0 +1,30 @@
+{
+  "user": "cache-user",
+  "content": "The same document text, submitted more than once.",
+  "duplicate_title": "Re-uploaded copy",
+  "concurrent_content": "raced content",
+  "concurrent_count": 5,
+  "concurrent_expected": {
+    "new_count": 1,
+    "duplicate_count": 4
+  },
+  "new_docs_after_cache_hit": 3,
+  "other_user": "different-user",
+  "cache_hit_response": {
+    "expected_status": 200,
+    "expected_status_value": "completed",
+    "expected_from_cache": true
+  },
+  "new_submission_response": {
+    "expected_status": 201,
+    "expected_status_value": "queued"
+  },
+  "duplicate_summary_checks": {
+    "source": "cache",
+    "marker": "DUPLICATE UPLOAD"
+  },
+  "fresh_summary_checks": {
+    "source": "generated",
+    "no_duplicate_marker": "DUPLICATE"
+  }
+}
